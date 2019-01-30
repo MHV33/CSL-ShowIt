@@ -1,4 +1,6 @@
 ﻿using ColossalFramework;
+using System;
+using UnityEngine;
 
 namespace ShowIt
 {
@@ -12,6 +14,8 @@ namespace ShowIt
             switch (resource)
             {
                 case ImmaterialResourceManager.Resource.HealthCare:
+                    //Debug.Log("HealthCare: " + ((float)Citizen.GetHealthLevel(data.m_health) * 0.2f * 100));
+                    //return (int)Math.Round((float)Citizen.GetHealthLevel(data.m_health) * 0.2f * 100);
                 case ImmaterialResourceManager.Resource.FireDepartment:
                 case ImmaterialResourceManager.Resource.PoliceDepartment:
                 case ImmaterialResourceManager.Resource.EducationElementary:
@@ -80,11 +84,33 @@ namespace ShowIt
             }
         }
 
+        public static int CalculateResourceEffect(ushort buildingID, ref Building data, ZonedBuildingExtenderPanel.LevelUpResource resource)
+        {
+            int education = 0;
+            int landValue = 0;
+            if (data.m_levelUpProgress > 0)
+            {
+                education = (data.m_levelUpProgress & 0xF);
+                landValue = (data.m_levelUpProgress >> 4);
+            }
+            Debug.Log("progress: " + data.m_levelUpProgress + ", ed: " + education + ", lv: " + landValue);
+            switch (resource)
+            {
+                case ZonedBuildingExtenderPanel.LevelUpResource.Education:
+                    return education;
+                case ZonedBuildingExtenderPanel.LevelUpResource.LandValue:
+                    return landValue;
+                default:
+                    return 0;
+            }
+        }
+
         public static int GetMaxEffect(ImmaterialResourceManager.Resource resource)
         {
             switch (resource)
             {
                 case ImmaterialResourceManager.Resource.HealthCare:
+                    return 100;
                 case ImmaterialResourceManager.Resource.FireDepartment:
                 case ImmaterialResourceManager.Resource.PoliceDepartment:
                 case ImmaterialResourceManager.Resource.EducationElementary:
@@ -130,6 +156,19 @@ namespace ShowIt
                     return 10;
                 case ImmaterialResourceManager.Resource.None:
                     return 0;
+                default:
+                    return 0;
+            }
+        }
+
+        public static int GetMaxEffect(ushort buildingId, ref Building building, ZonedBuildingExtenderPanel.LevelUpResource resource)
+        {
+            switch (resource)
+            {
+                case ZonedBuildingExtenderPanel.LevelUpResource.Education:
+                    return 15;
+                case ZonedBuildingExtenderPanel.LevelUpResource.LandValue:
+                    return 15;
                 default:
                     return 0;
             }

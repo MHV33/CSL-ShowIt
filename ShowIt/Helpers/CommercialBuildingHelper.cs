@@ -1,4 +1,5 @@
 ﻿using ColossalFramework;
+using UnityEngine;
 
 namespace ShowIt
 {
@@ -71,6 +72,27 @@ namespace ShowIt
             }
         }
 
+        public static int CalculateResourceEffect(ushort buildingID, ref Building data, ZonedBuildingExtenderPanel.LevelUpResource resource)
+        {
+            int wealth = 0;
+            int landValue = 0;
+            if (data.m_levelUpProgress > 0)
+            {
+                wealth = (data.m_levelUpProgress & 0xF);
+                landValue = (data.m_levelUpProgress >> 4);
+            }
+            Debug.Log("progress: " + data.m_levelUpProgress + ", w: " + wealth + ", lv: " + landValue);
+            switch (resource)
+            {
+                case ZonedBuildingExtenderPanel.LevelUpResource.Wealth:
+                    return wealth;
+                case ZonedBuildingExtenderPanel.LevelUpResource.LandValue:
+                    return landValue;
+                default:
+                    return 0;
+            }
+        }
+
         public static int GetMaxEffect(ImmaterialResourceManager.Resource resource)
         {
             switch (resource)
@@ -119,6 +141,19 @@ namespace ShowIt
                     return 100;
                 case ImmaterialResourceManager.Resource.None:
                     return 0;
+                default:
+                    return 0;
+            }
+        }
+
+        public static int GetMaxEffect(ushort buildingId, ref Building building, ZonedBuildingExtenderPanel.LevelUpResource resource)
+        {
+            switch (resource)
+            {
+                case ZonedBuildingExtenderPanel.LevelUpResource.Wealth:
+                    return 15;
+                case ZonedBuildingExtenderPanel.LevelUpResource.LandValue:
+                    return 15;
                 default:
                     return 0;
             }
