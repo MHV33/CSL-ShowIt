@@ -7,8 +7,19 @@ using UnityEngine;
 
 namespace ShowIt
 {
-    class ZonedBuildingExtenderPanel : MonoBehaviour
+    public class ZonedBuildingExtenderPanel : MonoBehaviour
     {
+        public const int RESOURCE_COUNT = 4;
+        public const int RESOURCE_START = 50;
+        public enum LevelUpResource
+        {
+            Education = 50,
+            LandValue = 51,
+            Services = 52,
+            Wealth = 53,
+            None = 255
+        }
+
         private bool _initialized;
         private ushort _cachedBuildingID;
 
@@ -110,7 +121,7 @@ namespace ShowIt
                     _extenderPanel.AlignTo(_extenderPanel.parent, UIAlignAnchor.BottomLeft);
                     _extenderPanel.relativePosition = new Vector3(0f, _extenderPanel.parent.height - 15f);
                     _extenderPanel.width = _extenderPanel.parent.width;
-                    _extenderPanel.height = 350f;
+                    _extenderPanel.height = 400f;
                     columns = 6;
                     separator = 23;
                     gap = 32;
@@ -120,7 +131,7 @@ namespace ShowIt
                     _extenderPanel.AlignTo(_extenderPanel.parent, UIAlignAnchor.TopRight);
                     _extenderPanel.relativePosition = new Vector3(_extenderPanel.parent.width + 1f, 0f);
                     _extenderPanel.width = 340f;
-                    _extenderPanel.height = _extenderPanel.parent.height - 15f;
+                    _extenderPanel.height = _extenderPanel.parent.height + 45f;
                     columns = 5;
                     separator = 15;
                     gap = 10;
@@ -142,7 +153,7 @@ namespace ShowIt
                 UILabel impactLegend;
                 UISprite impactIcon;
 
-                for (var i = 0; i < 20; i++)
+                for (var i = 0; i < 22; i++)
                 {
                     impactChart = UIUtils.CreateTwoSlicedRadialChart(_extenderPanel, "ShowItZonedBuildingExtenderPanelEffectChart" + i);
                     impactChart.AlignTo(_extenderPanel, UIAlignAnchor.TopRight);
@@ -258,6 +269,38 @@ namespace ShowIt
                         _maxEffectsOnZonedBuilding.Add(i, maxEffect);
                     }
 
+                    for (var i = RESOURCE_START; i < RESOURCE_START+RESOURCE_COUNT; i++)
+                    {
+                        switch (building.Info.m_class.GetZone())
+                        {
+                            case ItemClass.Zone.ResidentialHigh:
+                            case ItemClass.Zone.ResidentialLow:
+                                impact = ResidentialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (LevelUpResource)i);
+                                maxEffect = ResidentialBuildingHelper.GetMaxEffect(buildingId, ref building, (LevelUpResource)i);
+                                break;
+                            case ItemClass.Zone.Industrial:
+                                impact = IndustrialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (LevelUpResource)i);
+                                maxEffect = IndustrialBuildingHelper.GetMaxEffect(buildingId, ref building, (LevelUpResource)i);
+                                break;
+                            case ItemClass.Zone.CommercialHigh:
+                            case ItemClass.Zone.CommercialLow:
+                                impact = CommercialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (LevelUpResource)i);
+                                maxEffect = CommercialBuildingHelper.GetMaxEffect(buildingId, ref building, (LevelUpResource)i);
+                                break;
+                            case ItemClass.Zone.Office:
+                                impact = OfficeBuildingHelper.CalculateResourceEffect(buildingId, ref building, (LevelUpResource)i);
+                                maxEffect = OfficeBuildingHelper.GetMaxEffect(buildingId, ref building, (LevelUpResource)i);
+                                break;
+                            default:
+                                impact = 0;
+                                maxEffect = 0;
+                                break;
+                        }
+
+                        _effectsOnZonedBuilding.Add(i, impact);
+                        _maxEffectsOnZonedBuilding.Add(i, maxEffect);
+                    }
+
                     ResetAllEffectCharts();
 
                     switch (building.Info.m_class.GetZone())
@@ -313,8 +356,9 @@ namespace ShowIt
                 SetEffectChart(16, ImmaterialResourceManager.Resource.CrimeRate);
                 SetEffectChart(17, ImmaterialResourceManager.Resource.NoisePollution);
                 SetEffectChart(18, ImmaterialResourceManager.Resource.Abandonment);
-
                 _effectCharts[19].isVisible = false;
+                SetLevelUpChart(20, LevelUpResource.LandValue);
+                SetLevelUpChart(21, LevelUpResource.Education);
             }
             catch (Exception e)
             {
@@ -346,7 +390,8 @@ namespace ShowIt
                 SetEffectChart(17, ImmaterialResourceManager.Resource.CrimeRate);
                 SetEffectChart(18, ImmaterialResourceManager.Resource.NoisePollution);
                 SetEffectChart(19, ImmaterialResourceManager.Resource.Abandonment);
-
+                SetLevelUpChart(20, LevelUpResource.Services);
+                SetLevelUpChart(21, LevelUpResource.Education);
             }
             catch (Exception e)
             {
@@ -378,6 +423,8 @@ namespace ShowIt
                 SetEffectChart(17, ImmaterialResourceManager.Resource.CrimeRate);
                 SetEffectChart(18, ImmaterialResourceManager.Resource.NoisePollution);
                 SetEffectChart(19, ImmaterialResourceManager.Resource.Abandonment);
+                SetLevelUpChart(20, LevelUpResource.LandValue);
+                SetLevelUpChart(21, LevelUpResource.Wealth);
             }
             catch (Exception e)
             {
@@ -404,12 +451,13 @@ namespace ShowIt
                 SetEffectChart(12, ImmaterialResourceManager.Resource.FirewatchCoverage);
                 SetEffectChart(13, ImmaterialResourceManager.Resource.DisasterCoverage);
                 SetEffectChart(14, ImmaterialResourceManager.Resource.RadioCoverage);
-                SetEffectChart(15, ImmaterialResourceManager.Resource.FireHazard);
-                SetEffectChart(16, ImmaterialResourceManager.Resource.CrimeRate);
-                SetEffectChart(17, ImmaterialResourceManager.Resource.NoisePollution);
-                SetEffectChart(18, ImmaterialResourceManager.Resource.Abandonment);
-
-                _effectCharts[19].isVisible = false;
+                _effectCharts[15].isVisible = false;
+                SetEffectChart(16, ImmaterialResourceManager.Resource.FireHazard);
+                _effectCharts[17].isVisible = false;
+                SetEffectChart(18, ImmaterialResourceManager.Resource.NoisePollution);
+                SetEffectChart(19, ImmaterialResourceManager.Resource.Abandonment);
+                SetLevelUpChart(20, LevelUpResource.Services);
+                SetLevelUpChart(21, LevelUpResource.Education);
             }
             catch (Exception e)
             {
@@ -461,17 +509,17 @@ namespace ShowIt
                 Color32 colorGreen = new Color32(0, 255, 0, 128);
                 Color32 color;
 
-                if (resourceEffectPercentage > 0.66f)
+                if (resourceEffectPercentage > 0.50f)
                 {
                     color = IsEffectPositive(resource) ? colorGreen : colorRed;
                 }
-                else if (resourceEffectPercentage > 0.33f)
+                else if (resourceEffectPercentage > 0.20f)
                 {
-                    color = IsEffectPositive(resource) ? colorYellow : colorRed;
+                    color = IsEffectPositive(resource) ? colorYellow : colorYellow;
                 }
                 else
                 {
-                    color = IsEffectPositive(resource) ? colorRed : colorRed;
+                    color = IsEffectPositive(resource) ? colorRed : colorGreen;
                 }
 
                 _effectCharts[position].GetSlice(0).outterColor = color;
@@ -500,6 +548,124 @@ namespace ShowIt
                 Debug.Log("[Show It!] ZonedBuildingExtenderPanel:SetEffectChart -> Exception: " + e.Message);
             }
         }
+
+        private void SetLevelUpChart(int position, LevelUpResource resource)
+        {
+            try
+            {
+                int resourceKey = (int)resource;
+                float resourceEffect = _effectsOnZonedBuilding[resourceKey];
+                float resourceMaxEffect = _maxEffectsOnZonedBuilding[resourceKey];
+                float resourceEffectPercentage = resourceEffect / resourceMaxEffect;
+
+                Color32 colorRed = new Color32(255, 0, 0, 128);
+                Color32 colorYellow = new Color32(255, 255, 0, 128);
+                Color32 colorGreen = new Color32(0, 255, 0, 128);
+                Color32 color;
+
+                if (resourceEffectPercentage > 0.50f)
+                {
+                    color = colorGreen;
+                }
+                else if (resourceEffectPercentage > 0.20f)
+                {
+                    color = colorYellow;
+                }
+                else
+                {
+                    color = colorRed;
+                }
+
+                _effectCharts[position].GetSlice(0).outterColor = color;
+                _effectCharts[position].GetSlice(0).innerColor = color;
+
+                _effectCharts[position].SetValues(resourceEffectPercentage, 1 - resourceEffectPercentage);
+                _effectCharts[position].tooltip = GetEffectLongName(resource); //Math.Round(resourceEffect) + "/" + Math.Round(resourceMaxEffect); ;
+                _effectCharts[position].objectUserData = resource;
+
+                _effectOverlays[position].text = $"{Math.Round(resourceEffectPercentage * 100f),1}%";
+                _effectOverlays[position].position = new Vector3(_effectCharts[position].width / 2f - _effectOverlays[position].width / 2f + 3f, _effectOverlays[position].height / 2f - 29.5f);
+
+                if (ModConfig.Instance.ExtendedPanelChartHelp is "Icon")
+                {
+                    _effectIcons[position].spriteName = GetEffectSprite(resource);
+                    _effectIcons[position].position = new Vector3(_effectCharts[position].width / 2f - _effectIcons[position].width / 2f, _effectIcons[position].height / 2f - 50f);
+                }
+                else
+                {
+                    _effectLegends[position].text = GetEffectShortName(resource);
+                    _effectLegends[position].position = new Vector3(_effectCharts[position].width / 2f - _effectLegends[position].width / 2f, _effectLegends[position].height / 2f - 55f);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log("[Show It!] ZonedBuildingExtenderPanel:SetLevelUpChart -> Exception: " + e.Message);
+            }
+        }
+
+        /*
+        private void SetLevelUpChart(int position, String resource, byte levelUpProgress)
+        {
+            try
+            {
+                float resourceEffect = 0;
+                Debug.Log("progress: " + levelUpProgress);
+                if (levelUpProgress > 0)
+                {
+                    int education = (levelUpProgress & 0xF) - 1;
+                    int landValue = (levelUpProgress >> 4) - 1;
+                    Debug.Log("progress: " + levelUpProgress + ", ed: " + education + ", lv: " + landValue);
+                    resourceEffect = (EDUCATION == resource) ? (float)education : (float)landValue;
+                }
+
+                float resourceMaxEffect = 15;
+                float resourceEffectPercentage = resourceEffect / resourceMaxEffect;
+
+                Color32 colorRed = new Color32(255, 0, 0, 128);
+                Color32 colorYellow = new Color32(255, 255, 0, 128);
+                Color32 colorGreen = new Color32(0, 255, 0, 128);
+                Color32 color;
+
+                if (resourceEffectPercentage > 0.50f)
+                {
+                    color = colorGreen;
+                }
+                else if (resourceEffectPercentage > 0.20f)
+                {
+                    color = colorYellow;
+                }
+                else
+                {
+                    color = colorRed;
+                }
+
+                _effectCharts[position].GetSlice(0).outterColor = color;
+                _effectCharts[position].GetSlice(0).innerColor = color;
+
+                _effectCharts[position].SetValues(resourceEffectPercentage, 1 - resourceEffectPercentage);
+                _effectCharts[position].tooltip = Math.Round(resourceEffect) + "/" + Math.Round(resourceMaxEffect); //(EDUCATION == resource) ? "Education" : "Land Value";
+                _effectCharts[position].objectUserData = (EDUCATION == resource) ? ImmaterialResourceManager.Resource.EducationElementary : ImmaterialResourceManager.Resource.LandValue;
+
+                _effectOverlays[position].text = $"{Math.Round(resourceEffectPercentage * 100f),1}%";
+                _effectOverlays[position].position = new Vector3(_effectCharts[position].width / 2f - _effectOverlays[position].width / 2f + 3f, _effectOverlays[position].height / 2f - 29.5f);
+
+                if (ModConfig.Instance.ExtendedPanelChartHelp is "Icon")
+                {
+                    _effectIcons[position].spriteName = GetEffectSprite((EDUCATION == resource) ? ImmaterialResourceManager.Resource.EducationElementary : ImmaterialResourceManager.Resource.LandValue);
+                    _effectIcons[position].position = new Vector3(_effectCharts[position].width / 2f - _effectIcons[position].width / 2f, _effectIcons[position].height / 2f - 50f);
+                }
+                else
+                {
+                    _effectLegends[position].text = (EDUCATION == resource) ? "Education" : "Land Value";
+                    _effectLegends[position].position = new Vector3(_effectCharts[position].width / 2f - _effectLegends[position].width / 2f, _effectLegends[position].height / 2f - 55f);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log("[Show It!] ZonedBuildingExtenderPanel:SetLevelUpChart -> Exception: " + e.Message);
+            }
+        }
+        */
 
         private bool IsEffectPositive(ImmaterialResourceManager.Resource resource)
         {
@@ -627,6 +793,25 @@ namespace ShowIt
             }
         }
 
+        private string GetEffectShortName(LevelUpResource resource)
+        {
+            switch (resource)
+            {
+                case LevelUpResource.Education:
+                    return "Level Up Ed";
+                case LevelUpResource.LandValue:
+                    return "Level Up LV";
+                case LevelUpResource.Services:
+                    return "Level Up Serv";
+                case LevelUpResource.Wealth:
+                    return "Level Up Wealth";
+                case LevelUpResource.None:
+                    return "None";
+                default:
+                    return "Unknown";
+            }
+        }
+
         private string GetEffectLongName(ImmaterialResourceManager.Resource resource)
         {
             switch (resource)
@@ -684,6 +869,25 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.PostService:
                     return "Post Service";
                 case ImmaterialResourceManager.Resource.None:
+                    return "None";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        private string GetEffectLongName(LevelUpResource resource)
+        {
+            switch (resource)
+            {
+                case LevelUpResource.Education:
+                    return "Level Up Education";
+                case LevelUpResource.LandValue:
+                    return "Level Up Land Value";
+                case LevelUpResource.Services:
+                    return "Level Up Services";
+                case LevelUpResource.Wealth:
+                    return "Level Up Wealth";
+                case LevelUpResource.None:
                     return "None";
                 default:
                     return "Unknown";
@@ -748,6 +952,23 @@ namespace ShowIt
                     return "InfoIconPost";
                 case ImmaterialResourceManager.Resource.None:
                     return "ToolbarIconHelp";
+                default:
+                    return "ToolbarIconHelp";
+            }
+        }
+
+        private string GetEffectSprite(LevelUpResource resource)
+        {
+            switch (resource)
+            {
+                case LevelUpResource.Education:
+                    return "ToolbarIconEducation";
+                case LevelUpResource.LandValue:
+                    return "InfoIconLevel";
+                case LevelUpResource.Services:
+                    return "InfoIconOutsideConnections";
+                case LevelUpResource.Wealth:
+                    return "InfoIconLandValue";
                 default:
                     return "ToolbarIconHelp";
             }
